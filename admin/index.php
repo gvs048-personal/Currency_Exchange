@@ -1,15 +1,11 @@
 <?php
 // Admin login page
 session_start();
+require_once 'web-app/config/database.php';
+
 if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
-
-    // Database connection
-    $conn = new mysqli('localhost', 'root', '', 'exchange_db');
-    if ($conn->connect_error) {
-        die('Connection failed: ' . $conn->connect_error);
-    }
 
     $stmt = $conn->prepare('SELECT * FROM admins WHERE username = ? AND password = ?');
     $stmt->bind_param('ss', $username, $password);

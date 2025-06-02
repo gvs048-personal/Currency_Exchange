@@ -1,14 +1,14 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "exchange_db";
+// Centralized database connection
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$host = 'localhost';
+$username = 'root';
+$password = '';
+$database = 'exchange_db';
 
-// Check connection
+$conn = new mysqli($host, $username, $password, $database);
+
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die('Connection failed: ' . $conn->connect_error);
 }
 ?>

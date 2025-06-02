@@ -6,15 +6,11 @@ if (!isset($_SESSION['admin'])) {
     exit;
 }
 
+require_once 'web-app/config/database.php';
+
 if (isset($_POST['update'])) {
     $currency = $_POST['currency'];
     $rate = $_POST['rate'];
-
-    // Database connection
-    $conn = new mysqli('localhost', 'root', '', 'exchange_db');
-    if ($conn->connect_error) {
-        die('Connection failed: ' . $conn->connect_error);
-    }
 
     $stmt = $conn->prepare('INSERT INTO exchange_rates (currency, rate) VALUES (?, ?) ON DUPLICATE KEY UPDATE rate = ?');
     $stmt->bind_param('sdd', $currency, $rate, $rate);
