@@ -4,12 +4,17 @@ $errors = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get POST data
     $name = isset($_POST['name']) ? strip_tags(trim($_POST['name'])) : '';
+	$phone_no = isset($_POST['phone_no']) ? strip_tags(trim($_POST['phone_no'])) : '';
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $message = isset($_POST['message']) ? strip_tags(trim($_POST['message'])) : '';
+	$subject = "Enquiry from Oxford Street FX";
 
     // Validate form fields
     if (empty($name)) {
         $errors[] = 'Name is empty';
+    }
+	if (empty($phone_no)) {
+        $errors[] = 'Phone No is empty';
     }
 
     if (empty($email)) {
@@ -25,14 +30,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // If no errors, send email
     if (empty($errors)) {
         // Recipient email address (replace with your own)
-        $recipient = "srimca2007@gmail.com";
+        $recipient = "rates@oxfordstreetfx.com";
 
         // Additional headers
         $headers = "From: $name <$email>";
 
         // Send email
-        if (mail($recipient, $message, $headers)) {
-            echo "Email sent successfully!";
+        if (mail($recipient,$subject , $message, $headers)) {
+            header("Location: emailconfirmation.html");
         } else {
             echo "Failed to send email. Please try again later.";
         }

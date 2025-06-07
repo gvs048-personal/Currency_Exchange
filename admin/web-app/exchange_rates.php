@@ -52,8 +52,8 @@ if (!$result) {
         <thead>
         <tr>
             <th>Currency Name</th>
-            <th>We Buy Price</th>
-            <th>We Sell Price</th>
+            <th>Buy Price</th>
+            <th>Sell Price</th>
         </tr>
         </thead>
         <tbody>

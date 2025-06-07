@@ -3,6 +3,7 @@ require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
+    $currency_code = $_POST['currency_code'];
     $currency_name = $_POST['currency_name'];
     $sell_price = $_POST['sell_price'];
     $buy_price = $_POST['buy_price'];
@@ -14,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         move_uploaded_file($_FILES["currency_logo"]["tmp_name"], $target_file);
         $currency_logo = $target_file;
 
-        $sql = "UPDATE currencies SET currency_name = ?, sell_price = ?, buy_price = ?, currency_logo = ? WHERE id = ?";
+        $sql = "UPDATE currencies SET currency_code = ?, currency_name = ?, sell_price = ?, buy_price = ?, currency_logo = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sddsi", $currency_name, $sell_price, $buy_price, $currency_logo, $id);
+        $stmt->bind_param("ssddsi", $currency_code, $currency_name, $sell_price, $buy_price, $currency_logo, $id);
     } else {
-        $sql = "UPDATE currencies SET currency_name = ?, sell_price = ?, buy_price = ? WHERE id = ?";
+        $sql = "UPDATE currencies SET currency_code = ?, currency_name = ?, sell_price = ?, buy_price = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sddi", $currency_name, $sell_price, $buy_price, $id);
+        $stmt->bind_param("ssddi", $currency_code, $currency_name, $sell_price, $buy_price, $id);
     }
 
     if ($stmt->execute()) {

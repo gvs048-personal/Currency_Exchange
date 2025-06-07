@@ -30,18 +30,23 @@ if (!isset($_SESSION['admin_logged_in'])) {
         <h2 style="text-align: center;">Currency Converter</h2>
         <form id="currency-form" action="src/add_currency.php" method="POST" enctype="multipart/form-data" style="width: 40%; margin: auto;">
             <div class="form-group">
+                <label for="currency_code">Currency Code:</label>
+                <input type="text" class="form-control" id="currency_code" name="currency_code" required>
+            </div>
+
+            <div class="form-group">
                 <label for="currency_name">Currency Name:</label>
                 <input type="text" class="form-control" id="currency_name" name="currency_name" required>
             </div>
 
             <div class="form-group">
-                <label for="sell_price">Sell Price:</label>
-                <input type="number" step="0.00001" class="form-control" id="sell_price" name="sell_price" required>
+                <label for="buy_price">Buy Price:</label>
+                <input type="number" step="0.00001" class="form-control" id="buy_price" name="buy_price" required>
             </div>
 
             <div class="form-group">
-                <label for="buy_price">Buy Price:</label>
-                <input type="number" step="0.00001" class="form-control" id="buy_price" name="buy_price" required>
+                <label for="sell_price">Sell Price:</label>
+                <input type="number" step="0.00001" class="form-control" id="sell_price" name="sell_price" required>
             </div>
 
             <div class="form-group">
@@ -57,9 +62,10 @@ if (!isset($_SESSION['admin_logged_in'])) {
             <thead class="thead-dark">
                 <tr>
                     <th>#</th>
+                    <th>Currency Code</th>
                     <th>Currency Name</th>
-                    <th>Sell Price</th>
                     <th>Buy Price</th>
+                    <th>Sell Price</th>
                     <th>Currency Logo</th>
                     <th>Actions</th>
                 </tr>
@@ -83,9 +89,10 @@ if (!isset($_SESSION['admin_logged_in'])) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
+                    <td>${currency.currency_code}</td>
                     <td>${currency.currency_name}</td>
-                    <td>${currency.sell_price}</td>
                     <td>${currency.buy_price}</td>
+                    <td>${currency.sell_price}</td>
                     <td><img src="uploads/${currency.currency_logo}" alt="Logo" width="50"></td>
                     <td>
                         <button class="btn btn-warning btn-sm" onclick="editCurrency(${currency.id})">Edit</button>
@@ -120,6 +127,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
                 // Populate the modal with the fetched data
                 document.getElementById('edit-id').value = currency.id;
+                document.getElementById('edit-currency_code').value = currency.currency_code;
                 document.getElementById('edit-currency_name').value = currency.currency_name;
                 document.getElementById('edit-sell_price').value = currency.sell_price;
                 document.getElementById('edit-buy_price').value = currency.buy_price;
@@ -146,18 +154,23 @@ if (!isset($_SESSION['admin_logged_in'])) {
             <input type="hidden" id="edit-id" name="id">
 
             <div class="form-group">
+                <label for="edit-currency_code">Currency Code:</label>
+                <input type="text" class="form-control" id="edit-currency_code" name="currency_code" required>
+            </div>
+
+            <div class="form-group">
                 <label for="edit-currency_name">Currency Name:</label>
                 <input type="text" class="form-control" id="edit-currency_name" name="currency_name" required>
             </div>
 
             <div class="form-group">
-                <label for="edit-sell_price">Sell Price:</label>
-                <input type="number" step="0.00001" class="form-control" id="edit-sell_price" name="sell_price" required>
+                <label for="edit-buy_price">Buy Price:</label>
+                <input type="number" step="0.00001" class="form-control" id="edit-buy_price" name="buy_price" required>
             </div>
 
             <div class="form-group">
-                <label for="edit-buy_price">Buy Price:</label>
-                <input type="number" step="0.00001" class="form-control" id="edit-buy_price" name="buy_price" required>
+                <label for="edit-sell_price">Sell Price:</label>
+                <input type="number" step="0.00001" class="form-control" id="edit-sell_price" name="sell_price" required>
             </div>
 
             <div class="form-group">

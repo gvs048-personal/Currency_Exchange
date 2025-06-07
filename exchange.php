@@ -1,7 +1,18 @@
 <?php
 require_once 'admin/web-app/config/database.php';
 
-$sql = "SELECT currency_name, buy_price, sell_price, currency_logo FROM currencies";
+// Determine the sorting column and order
+$sort_column = isset($_GET['sort']) ? $_GET['sort'] : 'currency_name';
+$sort_order = isset($_GET['order']) && $_GET['order'] === 'desc' ? 'DESC' : 'ASC';
+
+// Validate the sorting column to prevent SQL injection
+$allowed_columns = ['currency_code', 'currency_name', 'buy_price', 'sell_price'];
+if (!in_array($sort_column, $allowed_columns)) {
+    $sort_column = 'currency_name';
+}
+
+// Update the SQL query to include sorting
+$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies ORDER BY $sort_column $sort_order";
 $result = $conn->query($sql);
 
 if (!$result) {
@@ -48,7 +59,7 @@ if (!$result) {
     <style>
         .currency-table th,
         .currency-table td {
-            width: 33%;
+            width: 25%;
             text-align: center;
             padding: 10px;
         }
@@ -60,6 +71,10 @@ if (!$result) {
 
         .currency-table td:first-child {
             text-align: left;
+        }
+
+        .currency-table td:nth-child(2) {
+            text-align: left !important;
         }
 
         .currency-table {
@@ -93,10 +108,18 @@ if (!$result) {
                     </div>
                     <div class="site_information">
                         <ul>
-                            <li><a href="mailto:exchang@gmail.com"><img src="images/mail_icon.png"
+                            <li><a href="#"><img src="images/mail_icon.png"
                                         alt="#" />rates@oxfordstreetfx.com</a></li>
-                            <li><a href="tel:exchang@gmail.com"><img src="images/phone_icon.png" alt="#" />+44
+                            <li><a href="#"><img src="images/phone_icon.png" alt="#" />+44
                                     7939838857</a></li>
+									 <li>   
+							 <a  href="https://twitter.com/oxfordstreetfx"> <img src="images/twitter-icon.png" alt="Twtter"> </a>  &nbsp; 
+							 <a href="https://www.facebook.com/oxfordstreetfx/"><img src="images/fb-icon.png" alt="Facebook"></a> &nbsp; 
+							 <a href="https://www.instagram.com/oxfordstreetfx/"><img src="images/insta-icon.png" alt="Instagram"></a> &nbsp;
+							 <a href="https://www.youtube.com/@OxfordStreetFX"><img src="images/youtube-icon.png" alt="Youtube"></a>
+							 <a href="https://www.linkedin.com/in/oxfordstreetfx/"><img src="images/linkedin-icon.png" alt="LinkedIn"></a>  &nbsp;
+							 <a href="https://www.tiktok.com/@oxfordstreetfx"><img src="images/tiktok-icon.png" alt="TikTok"></a>
+							 </li>
                             <!-- <li><a class="join_bt" href="#">Join us</a></li> -->
                         </ul>
                     </div>
@@ -121,7 +144,7 @@ if (!$result) {
                                     <ul class="navbar-nav">
                                         <li><a class="nav-link" href="index.html">Home</a></li>
                                         <li><a class="nav-link" href="about.html">About</a></li>
-                                        <li><a class="nav-link" href="exchange.php">Exchange</a></li>
+                                        <li><a class="nav-link" href="exchange.php">Exchange Rates</a></li>
                                         <li><a class="nav-link" href="services.html">Services</a></li>
                                         <!-- <li><a class="nav-link" href="new.html">News</a></li> -->
                                         <li><a class="nav-link" href="contact.html">Contact</a></li>
@@ -144,7 +167,7 @@ if (!$result) {
     <!-- End header -->
 
     <!-- Start Banner -->
-    <div class="section inner_page_banner">
+    <div class="section inner_page_banner" style="background-color:blue;">
         <div class="container">
             <div class="row">
                 <div class="col-md-12">
@@ -163,14 +186,14 @@ if (!$result) {
             <div class="row">
                 <div class="col-md-4">
                     <div class="full text_align_right_img">
-                        <img src="images/img1.png" alt="#" />
+                        <img src="images/exchangeimg.png" alt="#" />
                     </div>
                 </div>
                 <div class="col-md-8 layout_padding">
                     <div class="col-md-4">
                         <div class="full">
                             <div class="heading_main text_align_center">
-                                <h2><span class="theme_color"></span>Exchange</h2>
+                                <h2><span class="theme_color"></span>Exchange </h2>
                             </div>
                         </div>
                     </div>
@@ -178,9 +201,10 @@ if (!$result) {
                         <table class="currency-table">
                             <thead>
                                 <tr>
-                                    <th>Currency Name</th>
-                                    <th>We Buy Price</th>
-                                    <th>We Sell Price</th>
+                                    <th><a href="?sort=currency_code&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Currency Code</a></th>
+                                    <th style="text-align: left;"><a href="?sort=currency_name&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Currency Name</a></th>
+                                    <th><a href="?sort=buy_price&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Buy Price</a></th>
+                                    <th><a href="?sort=sell_price&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Sell Price</a></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -189,10 +213,11 @@ if (!$result) {
                                         <tr>
                                             <td>
                                                 <img src="admin/web-app/uploads/<?= htmlspecialchars($row['currency_logo']) ?>"
-                                                    alt="<?= htmlspecialchars($row['currency_name']) ?>"
+                                                    alt="<?= htmlspecialchars($row['currency_code']) ?>"
                                                     style="width: 30px; height: auto; margin-right: 10px;">
-                                                <?= htmlspecialchars($row['currency_name']) ?>
+                                                <?= htmlspecialchars($row['currency_code']) ?>
                                             </td>
+                                            <td><?= htmlspecialchars($row['currency_name']) ?></td>
                                             <td><?= htmlspecialchars($row['buy_price']) ?></td>
                                             <td><?= htmlspecialchars($row['sell_price']) ?></td>
                                         </tr>
@@ -213,7 +238,7 @@ if (!$result) {
     <!-- end section -->
 
     <!-- Start Footer -->
-    <footer class="footer-box">
+    <footer class="footer-box" style="background-color:#dc3545;">
         <div class="container">
             <div class="row">
                 <div class="col-md-12 white_fonts">
@@ -230,7 +255,7 @@ if (!$result) {
                             <div class="full">
                                 <ul class="menu_footer">
                                     <li><a href="about.html">> About</a></li>
-                                    <li><a href="exchange.php">> Exchange</a></li>
+                                    <li><a href="exchange.php">> Exchange Rates</a></li>
                                     <li><a href="services.html">> Services</a></li>
                                     <li><a href="privacy.html">> Privacy Policy</a></li>
                                     <li><a href="terms.html">> Terms and Conditions</a></li>
@@ -302,12 +327,14 @@ if (!$result) {
         </div>
     </footer>
     <!-- End Footer -->
-
-    <div class="footer_bottom">
+<!-- Elfsight WhatsApp Chat | Untitled WhatsApp Chat -->
+<script src="https://static.elfsight.com/platform/platform.js" async></script>
+<div class="elfsight-app-3828b648-fdb8-4143-aeaf-a08a5e06a6d4" data-elfsight-app-lazy></div>
+  <div class="footer_bottom" style="background-color:#dc3545;">
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <p class="crp">© Copyrights 2025 design by ExpertiseIT</p>
+                    <p class="crp">© Oxford Street FX. All Right Reserved.</p>
                 </div>
             </div>
         </div>
@@ -329,6 +356,40 @@ if (!$result) {
     <script src="js/isotope.min.js"></script>
     <script src="js/images-loded.min.js"></script>
     <script src="js/custom.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const headers = document.querySelectorAll('.currency-table th a');
+
+        headers.forEach(header => {
+            header.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const url = new URL(this.href, window.location.href);
+                const currentOrder = url.searchParams.get('order');
+                const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+                url.searchParams.set('order', newOrder);
+
+                // Update the href attribute dynamically
+                this.href = url.toString();
+
+                // Send AJAX request
+                fetch(url)
+                    .then(response => response.text())
+                    .then(data => {
+                        // Parse the response and update the table body
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(data, 'text/html');
+                        const newTableBody = doc.querySelector('.currency-table tbody');
+
+                        if (newTableBody) {
+                            document.querySelector('.currency-table tbody').innerHTML = newTableBody.innerHTML;
+                        }
+                    })
+                    .catch(error => console.error('Error fetching sorted data:', error));
+            });
+        });
+    });
+</script>
 
 </body>
 
