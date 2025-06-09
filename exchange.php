@@ -11,13 +11,23 @@ if (!in_array($sort_column, $allowed_columns)) {
     $sort_column = 'currency_name';
 }
 
-// Update the SQL query to include sorting
-$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies ORDER BY $sort_column $sort_order";
+// Update the SQL query to exclude Euro and Dollar from the main query
+$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code NOT IN ('EUR', 'USD') ORDER BY $sort_column $sort_order";
 $result = $conn->query($sql);
 
 if (!$result) {
     die("Error fetching data: " . $conn->error);
 }
+
+// Fetch static rows (Euro and Dollar) from the database
+$static_sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code IN ('EUR', 'USD') ORDER BY FIELD(currency_code, 'EUR', 'USD')";
+$static_result = $conn->query($static_sql);
+
+if (!$static_result) {
+    die("Error fetching static rows: " . $conn->error);
+}
+
+$static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,7 +41,7 @@ if (!$result) {
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- Site Metas -->
-    <title>Oxford Street FX</title>
+    <title>Exchange Rates</title>
     <meta name="keywords" content="">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -172,7 +182,7 @@ if (!$result) {
             <div class="row">
                 <div class="col-md-12">
                     <div class="banner_title">
-                        <h3>Exchange</h3>
+                        <h3>Exchange Rates</h3>
                     </div>
                 </div>
             </div>
@@ -190,10 +200,10 @@ if (!$result) {
                     </div>
                 </div>
                 <div class="col-md-8 layout_padding">
-                    <div class="col-md-4">
+                    <div class="col-md-8">
                         <div class="full">
                             <div class="heading_main text_align_center">
-                                <h2><span class="theme_color"></span>Exchange </h2>
+                                <h2><span class="theme_color"></span>Exchange Rates</h2>
                             </div>
                         </div>
                     </div>
@@ -208,6 +218,20 @@ if (!$result) {
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php foreach ($static_rows as $row): ?>
+                                    <tr>
+                                        <td>
+                                            <img src="admin/web-app/uploads/<?= htmlspecialchars($row['currency_logo']) ?>"
+                                                alt="<?= htmlspecialchars($row['currency_code']) ?>"
+                                                style="width: 30px; height: auto; margin-right: 10px;">
+                                            <?= htmlspecialchars($row['currency_code']) ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($row['currency_name']) ?></td>
+                                        <td><?= htmlspecialchars($row['buy_price']) ?></td>
+                                        <td><?= htmlspecialchars($row['sell_price']) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+
                                 <?php if ($result->num_rows > 0): ?>
                                     <?php while ($row = $result->fetch_assoc()): ?>
                                         <tr>
@@ -224,7 +248,7 @@ if (!$result) {
                                     <?php endwhile; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="3">No currencies available.</td>
+                                        <td colspan="4">No currencies available.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
