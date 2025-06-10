@@ -1,18 +1,8 @@
 <?php
 require_once 'admin/web-app/config/database.php';
 
-// Determine the sorting column and order
-$sort_column = isset($_GET['sort']) ? $_GET['sort'] : 'currency_name';
-$sort_order = isset($_GET['order']) && $_GET['order'] === 'desc' ? 'DESC' : 'ASC';
-
-// Validate the sorting column to prevent SQL injection
-$allowed_columns = ['currency_code', 'currency_name', 'buy_price', 'sell_price'];
-if (!in_array($sort_column, $allowed_columns)) {
-    $sort_column = 'currency_name';
-}
-
-// Update the SQL query to exclude Euro and Dollar from the main query
-$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code NOT IN ('EUR', 'USD') ORDER BY $sort_column $sort_order";
+// Update the SQL query to exclude Euro and Dollar from the main query and sort by currency_code in ascending order
+$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code NOT IN ('EUR', 'USD') ORDER BY currency_code ASC";
 $result = $conn->query($sql);
 
 if (!$result) {
@@ -211,10 +201,10 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                         <table class="currency-table">
                             <thead>
                                 <tr>
-                                    <th><a href="?sort=currency_code&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Currency Code</a></th>
-                                    <th style="text-align: left;"><a href="?sort=currency_name&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Currency Name</a></th>
-                                    <th><a href="?sort=buy_price&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Buy Price</a></th>
-                                    <th><a href="?sort=sell_price&order=<?= $sort_order === 'ASC' ? 'desc' : 'asc' ?>">Sell Price</a></th>
+                                    <th>Currency Code</th>
+                                    <th style="text-align: left;">Currency Name</th>
+                                    <th>Buy Price</th>
+                                    <th>Sell Price</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -380,41 +370,6 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
     <script src="js/isotope.min.js"></script>
     <script src="js/images-loded.min.js"></script>
     <script src="js/custom.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const headers = document.querySelectorAll('.currency-table th a');
-
-        headers.forEach(header => {
-            header.addEventListener('click', function (event) {
-                event.preventDefault();
-
-                const url = new URL(this.href, window.location.href);
-                const currentOrder = url.searchParams.get('order');
-                const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-                url.searchParams.set('order', newOrder);
-
-                // Update the href attribute dynamically
-                this.href = url.toString();
-
-                // Send AJAX request
-                fetch(url)
-                    .then(response => response.text())
-                    .then(data => {
-                        // Parse the response and update the table body
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(data, 'text/html');
-                        const newTableBody = doc.querySelector('.currency-table tbody');
-
-                        if (newTableBody) {
-                            document.querySelector('.currency-table tbody').innerHTML = newTableBody.innerHTML;
-                        }
-                    })
-                    .catch(error => console.error('Error fetching sorted data:', error));
-            });
-        });
-    });
-</script>
-
 </body>
 
 </html>

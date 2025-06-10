@@ -4,6 +4,35 @@ if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: src/login.php');
     exit;
 }
+require_once 'config/database.php'; // Use the database connection from the included file
+
+// Determine the sorting column and order
+$sort_column = isset($_GET['sort']) ? $_GET['sort'] : 'currency_code';
+$sort_order = isset($_GET['order']) && strtolower($_GET['order']) === 'desc' ? 'DESC' : 'ASC';
+
+// Validate the sorting column to prevent SQL injection
+$allowed_columns = ['currency_code', 'currency_name', 'buy_price', 'sell_price'];
+if (!in_array($sort_column, $allowed_columns)) {
+    $sort_column = 'currency_code';
+}
+
+// Ensure EUR and USD rows are always at the top on page load
+$static_sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code IN ('EUR', 'USD') ORDER BY FIELD(currency_code, 'EUR', 'USD')";
+$static_result = $conn->query($static_sql);
+
+if (!$static_result) {
+    die("Error fetching static rows: " . $conn->error);
+}
+
+$static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
+
+// Fetch remaining rows sorted dynamically by the selected column and order
+$sql = "SELECT currency_code, currency_name, buy_price, sell_price, currency_logo FROM currencies WHERE currency_code NOT IN ('EUR', 'USD') ORDER BY $sort_column $sort_order";
+$result = $conn->query($sql);
+
+if (!$result) {
+    die("Error fetching data: " . $conn->error);
+}
 ?>
 
 <!DOCTYPE html>
@@ -61,17 +90,53 @@ if (!isset($_SESSION['admin_logged_in'])) {
         <table id="currency-table" class="table table-striped table-bordered table-hover">
             <thead class="thead-dark">
                 <tr>
-                    <th>#</th>
-                    <th>Currency Code</th>
+                    <th>Currency Logo</th>
+                    <th>
+                        <a href="#" id="sort-currency-code" data-sort="currency_code" data-order="asc">
+                            Currency Code
+                            <span id="sort-arrow">&#9650;</span>
+                        </a>
+                    </th>
                     <th>Currency Name</th>
                     <th>Buy Price</th>
                     <th>Sell Price</th>
-                    <th>Currency Logo</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Rows will be populated dynamically using JavaScript -->
+            <tbody id="currency-table-body">
+                <?php foreach ($static_rows as $row): ?>
+                    <tr>
+                        <td><img src="uploads/<?= htmlspecialchars($row['currency_logo']) ?>" alt="Logo" width="50"></td>
+                        <td><?= htmlspecialchars($row['currency_code']) ?></td>
+                        <td><?= htmlspecialchars($row['currency_name']) ?></td>
+                        <td><?= htmlspecialchars($row['buy_price']) ?></td>
+                        <td><?= htmlspecialchars($row['sell_price']) ?></td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editCurrency('<?= htmlspecialchars($row['currency_code']) ?>')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCurrency('<?= htmlspecialchars($row['currency_code']) ?>')">Delete</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+
+                <?php if ($result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><img src="uploads/<?= htmlspecialchars($row['currency_logo']) ?>" alt="Logo" width="50"></td>
+                            <td><?= htmlspecialchars($row['currency_code']) ?></td>
+                            <td><?= htmlspecialchars($row['currency_name']) ?></td>
+                            <td><?= htmlspecialchars($row['buy_price']) ?></td>
+                            <td><?= htmlspecialchars($row['sell_price']) ?></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editCurrency('<?= htmlspecialchars($row['currency_code']) ?>')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCurrency('<?= htmlspecialchars($row['currency_code']) ?>')">Delete</button>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6">No currencies available.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
 
@@ -79,28 +144,53 @@ if (!isset($_SESSION['admin_logged_in'])) {
     </main>
 
     <script>
-        async function fetchCurrencies() {
-            const response = await fetch('src/fetch_currencies.php');
-            const currencies = await response.json();
-            const tableBody = document.querySelector('#currency-table tbody');
-            tableBody.innerHTML = '';
+        async function fetchCurrencies(sort = 'currency_code', order = 'asc') {
+            try {
+                const response = await fetch(`src/fetch_currencies.php?sort=${sort}&order=${order}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch currencies');
+                }
+                const currencies = await response.json();
+                const tableBody = document.querySelector('#currency-table-body');
+                tableBody.innerHTML = '';
 
-            currencies.forEach((currency, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${currency.currency_code}</td>
-                    <td>${currency.currency_name}</td>
-                    <td>${currency.buy_price}</td>
-                    <td>${currency.sell_price}</td>
-                    <td><img src="uploads/${currency.currency_logo}" alt="Logo" width="50"></td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" onclick="editCurrency(${currency.id})">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteCurrency(${currency.id})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+                // Append EUR and USD rows first
+                currencies.staticRows.forEach(currency => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><img src="uploads/${currency.currency_logo}" alt="Logo" width="50"></td>
+                        <td>${currency.currency_code}</td>
+                        <td>${currency.currency_name}</td>
+                        <td>${currency.buy_price}</td>
+                        <td>${currency.sell_price}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editCurrency(${currency.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCurrency(${currency.id})">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Append sorted rows
+                currencies.sortedRows.forEach(currency => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><img src="uploads/${currency.currency_logo}" alt="Logo" width="50"></td>
+                        <td>${currency.currency_code}</td>
+                        <td>${currency.currency_name}</td>
+                        <td>${currency.buy_price}</td>
+                        <td>${currency.sell_price}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editCurrency(${currency.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCurrency(${currency.id})">Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load currencies. Please try again.');
+            }
         }
 
         async function deleteCurrency(id) {
@@ -118,6 +208,9 @@ if (!isset($_SESSION['admin_logged_in'])) {
             try {
                 // Fetch the currency details by ID
                 const response = await fetch(`src/fetch_currencies.php?id=${id}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch currency details');
+                }
                 const currency = await response.json();
 
                 if (currency.error) {
@@ -144,7 +237,23 @@ if (!isset($_SESSION['admin_logged_in'])) {
             document.getElementById('edit-modal').style.display = 'none';
         }
 
-        document.addEventListener('DOMContentLoaded', fetchCurrencies);
+        document.addEventListener('DOMContentLoaded', function () {
+            const sortLink = document.querySelector('#sort-currency-code');
+            sortLink.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                const currentOrder = this.dataset.order;
+                const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+                this.dataset.order = newOrder;
+
+                const sortArrow = document.querySelector('#sort-arrow');
+                sortArrow.innerHTML = newOrder === 'asc' ? '&#9650;' : '&#9660;';
+
+                fetchCurrencies(this.dataset.sort, newOrder);
+            });
+
+            fetchCurrencies();
+        });
     </script>
 
     <!-- Edit Currency Modal -->
