@@ -57,30 +57,152 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
     <![endif]-->
 
     <style>
-        .currency-table th,
-        .currency-table td {
-            width: 25%;
-            text-align: center;
-            padding: 10px;
+        /* Enhance table appearance */
+        .currency-table {
+            width: 100%; /* Set table width to 100% */
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .currency-table th {
             background-color: #007bff;
             color: white;
+            padding: 15px;
+            font-size: 1.1em;
+            text-transform: uppercase;
         }
 
-        .currency-table td:first-child {
-            text-align: left;
+        .currency-table td {
+            padding: 12px;
+            font-size: 1em;
+            border-bottom: 1px solid #ddd;
+            text-align: left; /* Align buy and sell prices to the left */
         }
 
-        .currency-table td:nth-child(2) {
-            text-align: left !important;
+        .currency-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .currency-table td:first-child img {
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Popup styling */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .popup h2 {
+            margin-top: 0;
+            font-size: 1.5em;
+            color: #007bff;
+            text-align: center;
+        }
+
+        .popup form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .popup input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        .popup button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .popup button:hover {
+            background-color: #0056b3;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #007bff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .currency-table th,
+            .currency-table td {
+                font-size: 0.9em;
+                padding: 10px;
+            }
+
+            .popup {
+                width: 95%;
+            }
+        }
+
+        /* Ensure parent container does not restrict table width */
+        .col-md-12.layout_padding {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        /* Remove layout_padding restrictions */
+        .layout_padding {
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Adjust column width */
+        .col-md-8 {
+            width: 100%;
+        }
+
+        .currency-table td:last-child {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .currency-table button {
+            margin: 5px 0;
+        }
+
+        .currency-table td button {
+            margin-left: 10px;
         }
 
         .currency-table {
-            width: 100%;
-            margin: 0 auto;
-            border-collapse: collapse;
+            margin: 20px auto; /* Center the table horizontally */
+        }
+
+        .currency-table th:nth-child(3),
+        .currency-table th:nth-child(4),
+        .currency-table td:nth-child(3),
+        .currency-table td:nth-child(4) {
+            text-align: center; /* Center-align buy and sell price columns */
         }
     </style>
 
@@ -148,6 +270,7 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                                         <li><a class="nav-link" href="services.html">Services</a></li>
                                         <!-- <li><a class="nav-link" href="new.html">News</a></li> -->
                                         <li><a class="nav-link" href="contact.html">Contact</a></li>
+                                        <li><a class="nav-link" href="cart.html"><img src="images/cart-icon.png" alt="Cart" style="width: 40px; height: auto; margin-right: 5px;">0.00</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -184,11 +307,6 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
     <div class="section">
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
-                    <div class="full text_align_right_img">
-                        <img src="images/exchangeimg.png" alt="#" />
-                    </div>
-                </div>
                 <div class="col-md-8 layout_padding">
                     <div class="col-md-8">
                         <div class="full">
@@ -197,14 +315,14 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-12 layout_padding">
-                        <table class="currency-table">
+                    <div class="layout_padding">
+                        <table class="currency-table" style="width: 1200px;">
                             <thead>
                                 <tr>
                                     <th>Currency Code</th>
                                     <th style="text-align: left;">Currency Name</th>
-                                    <th>Buy Price</th>
-                                    <th>Sell Price</th>
+                                    <th style="padding-left: 10px; text-align: right;">Buy Price</th>
+                                    <th style="padding-left: 10px; text-align: right;">Sell Price</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -217,8 +335,14 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                                             <?= htmlspecialchars($row['currency_code']) ?>
                                         </td>
                                         <td><?= htmlspecialchars($row['currency_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['buy_price']) ?></td>
-                                        <td><?= htmlspecialchars($row['sell_price']) ?></td>
+                                        <td style="text-align: right;">
+                                            <?= htmlspecialchars($row['buy_price']) ?>
+                                            <button class="btn btn-primary" onclick="showPopup('buy', '<?= htmlspecialchars($row['currency_code']) ?>', '<?= htmlspecialchars($row['currency_name']) ?>', <?= htmlspecialchars($row['buy_price']) ?>)">Click & Collect</button>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <?= htmlspecialchars($row['sell_price']) ?>
+                                            <button class="btn btn-primary" onclick="showPopup('sell', '<?= htmlspecialchars($row['currency_code']) ?>', '<?= htmlspecialchars($row['currency_name']) ?>', <?= htmlspecialchars($row['sell_price']) ?>)">Click & Sell</button>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
 
@@ -232,8 +356,14 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                                                 <?= htmlspecialchars($row['currency_code']) ?>
                                             </td>
                                             <td><?= htmlspecialchars($row['currency_name']) ?></td>
-                                            <td><?= htmlspecialchars($row['buy_price']) ?></td>
-                                            <td><?= htmlspecialchars($row['sell_price']) ?></td>
+                                            <td style="text-align: right;">
+                                                <?= htmlspecialchars($row['buy_price']) ?>
+                                                <button class="btn btn-primary" onclick="showPopup('buy', '<?= htmlspecialchars($row['currency_code']) ?>', '<?= htmlspecialchars($row['currency_name']) ?>', <?= htmlspecialchars($row['buy_price']) ?>)">Click & Collect</button>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <?= htmlspecialchars($row['sell_price']) ?>
+                                                <button class="btn btn-primary" onclick="showPopup('sell', '<?= htmlspecialchars($row['currency_code']) ?>', '<?= htmlspecialchars($row['currency_name']) ?>', <?= htmlspecialchars($row['sell_price']) ?>)">Click & Sell</button>
+                                            </td>
                                         </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>
@@ -284,7 +414,7 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
                         <!-- <div class="newsletter_form"> -->
                         <!-- <form action="index.html"> -->
                         <!-- <input type="email" placeholder="Your Email" name="#" required=""> -->
-                        <!-- <button>Submit</button> -->
+                        <!-- <button>Submit</button -->
                         <!-- </form> -->
                         <!-- </div> -->
                         <!-- </div> -->
@@ -370,6 +500,113 @@ $static_rows = $static_result->fetch_all(MYSQLI_ASSOC);
     <script src="js/isotope.min.js"></script>
     <script src="js/images-loded.min.js"></script>
     <script src="js/custom.js"></script>
+
+    <script>
+let cart = [];
+
+function updateCartDisplay() {
+    const cartTotal = cart.reduce((total, item) => total + (item.amount / item.rate), 0).toFixed(2);
+    const cartElement = document.querySelector('.navbar-nav .nav-link[href="cart.html"]');
+    if (cartElement) {
+        cartElement.innerHTML = `<img src="images/cart-icon.png" alt="Cart" style="width: 40px; height: auto; margin-right: 5px;">${cartTotal}`;
+    }
+}
+
+function showPopup(type, currencyCode, currencyName, rate) {
+    const popupContent = `
+        <div class="popup" id="popup">
+            <h2>Click & ${type.charAt(0).toUpperCase() + type.slice(1)}</h2>
+            <button class="close-btn" onclick="closePopup()">&times;</button>
+            <p>You are ${type === 'buy' ? 'buying' : 'selling'} ${currencyName} (${currencyCode})</p>
+            <p>At Our Best Exchange Rate of 1 GBP = ${rate} ${currencyCode}</p>
+            <form>
+                <label for="amount">You ${type === 'buy' ? 'want' : 'have'} ${currencyCode}</label>
+                <input type="number" id="amount" placeholder="Enter Amount">
+                <label for="gbp">You ${type === 'buy' ? 'have' : 'want'} GBP (£)</label>
+                <input type="text" id="gbp" readonly>
+                <button type="button" class="btn btn-primary" onclick="addToCart('${currencyCode}', '${currencyName}', ${rate}, '${type}')">Order Now</button>
+            </form>
+        </div>
+    `;
+    const popupContainer = document.createElement('div');
+    popupContainer.id = 'popup-container';
+    popupContainer.innerHTML = popupContent;
+    document.body.appendChild(popupContainer);
+
+    const gbpInput = document.getElementById('gbp');
+    const amountInput = document.getElementById('amount');
+
+    amountInput.addEventListener('input', function () {
+        const amountValue = parseFloat(this.value) || 0;
+        gbpInput.value = (amountValue / rate).toFixed(2); // Calculate the GBP value based on the entered amount
+    });
+}
+
+function addToCart(currencyCode, currencyName, rate, type) {
+    const amountInput = document.getElementById('amount');
+    const amountValue = parseFloat(amountInput.value) || 0;
+
+    if (amountValue <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+    }
+
+    const cartItem = {
+        currencyCode,
+        currencyName,
+        rate,
+        type,
+        amount: amountValue
+    };
+
+    cart.push(cartItem);
+    updateCartDisplay();
+
+    alert(`${currencyName} (${currencyCode}) has been added to your cart.`);
+    closePopup();
+}
+
+function closePopup() {
+    const popupContainer = document.getElementById('popup-container');
+    if (popupContainer) {
+        document.body.removeChild(popupContainer);
+    }
+}
+
+function showCartPopup() {
+    const popupContent = `
+        <div class="popup" id="cart-popup">
+            <h2>Your Cart</h2>
+            <button class="close-btn" onclick="closePopup()">&times;</button>
+            <div>
+                ${cart.length > 0 ? cart.map(item => `
+                    <div style="margin-bottom: 10px;">
+                        <p><strong>${item.currencyName} (${item.currencyCode})</strong></p>
+                        <p>Type: ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</p>
+                        <p>Amount: ${item.amount}</p>
+                        <p>Rate: ${item.rate}</p>
+                        <p>Total: ${(item.amount / item.rate).toFixed(2)} GBP</p>
+                    </div>
+                `).join('') : '<p>Your cart is empty.</p>'}
+            </div>
+        </div>
+    `;
+
+    const popupContainer = document.createElement('div');
+    popupContainer.id = 'popup-container';
+    popupContainer.innerHTML = popupContent;
+    document.body.appendChild(popupContainer);
+}
+
+// Attach event listener to cart menu item
+const cartMenuItem = document.querySelector('.navbar-nav .nav-link[href="cart.html"]');
+if (cartMenuItem) {
+    cartMenuItem.addEventListener('click', function(event) {
+        event.preventDefault();
+        showCartPopup();
+    });
+}
+</script>
 </body>
 
 </html>

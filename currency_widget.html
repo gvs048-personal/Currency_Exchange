@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Exchange Widget</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="buy-tab" data-toggle="tab" href="#buy" role="tab" aria-controls="buy" aria-selected="true">Buy Travel Money</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="sell-tab" data-toggle="tab" href="#sell" role="tab" aria-controls="sell" aria-selected="false">Sell Travel Money</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="buy" role="tabpanel" aria-labelledby="buy-tab">
+                        <form>
+                            <div class="form-group">
+                                <label for="currency-select">Select Currency</label>
+                                <select class="form-control" id="currency-select">
+                                    <!-- Dynamic options will be populated here -->
+                                </select>
+                            </div>
+                            <p class="text-center">Our Best Exchange Rate</p>
+                            <h4 class="text-center" id="exchange-rate"></h4>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // Wait for currencies to be fetched
+                                function setInitialBuyRate() {
+                                    if (!currencyData.length) {
+                                        setTimeout(setInitialBuyRate, 100); // Wait until currencyData is populated
+                                        return;
+                                    }
+                                    const firstCurrency = currencyData[0];
+                                    if (firstCurrency) {
+                                        const rate = firstCurrency.buy_price;
+                                        document.getElementById('exchange-rate').textContent =
+                                            `1 GBP = ${rate} ${firstCurrency.currency_code}`;
+
+                                        const buyAmountInput = document.getElementById('amount');
+                                        const gbpOutput = document.getElementById('gbp');
+
+                                        buyAmountInput.addEventListener('input', function () {
+                                            const amount = parseFloat(this.value) || 0;
+                                            gbpOutput.value = (amount / rate).toFixed(2); // Correct calculation for GBP amount
+                                        });
+                                    }
+                                }
+                                setInitialBuyRate();
+                            });
+                            </script>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="amount">You want to buy</label>
+                                    <input type="number" class="form-control" id="amount" placeholder="Enter Amount">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="gbp">You have GBP (£)</label>
+                                    <input type="text" class="form-control" id="gbp" readonly value="0.00">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-block">Order Now</button>
+                            <p class="text-center">Orders are valid for 24 hours.<br>Read T&C for more information.</p>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="sell" role="tabpanel" aria-labelledby="sell-tab">
+                        <form>
+                            <div class="form-group">
+                                <label for="currency-select-sell">Select Currency</label>
+                                <select class="form-control" id="currency-select-sell">
+                                    <!-- Dynamic options will be populated here -->
+                                </select>
+                            </div>
+                            <p class="text-center">Our Best Exchange Rate</p>
+                            <h4 class="text-center" id="exchange-rate-sell"></h4>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // Wait for currencies to be fetched
+                                function setInitialSellRate() {
+                                    if (!currencyData.length) {
+                                        setTimeout(setInitialSellRate, 100); // Wait until currencyData is populated
+                                        return;
+                                    }
+                                    const firstCurrency = currencyData[0];
+                                    if (firstCurrency) {
+                                        const rate = firstCurrency.sell_price;
+                                        document.getElementById('exchange-rate-sell').textContent = `1 GBP = ${rate} ${firstCurrency.currency_code}`;
+
+                                        const sellAmountInput = document.getElementById('amount-sell');
+                                        const gbpOutput = document.getElementById('gbp-sell');
+
+                                        sellAmountInput.addEventListener('input', function () {
+                                            const amount = parseFloat(this.value) || 0;
+                                            gbpOutput.value = (amount / rate).toFixed(2); // Correct calculation for GBP amount
+                                        });
+                                    }
+                                }
+                                setInitialSellRate();
+                            });
+                            </script>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="amount-sell">You want to sell</label>
+                                    <input type="number" class="form-control" id="amount-sell" placeholder="Enter Amount">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="gbp-sell">You receive GBP (£)</label>
+                                    <input type="text" class="form-control" id="gbp-sell" readonly value="0.00">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-block">Order Now</button>
+                            <p class="text-center">Orders are valid for 24 hours.<br>Read T&C for more information.</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="js/jquery.min.js"></script>
+    <script>
+        let currencyData = [];
+
+        async function fetchCurrencies() {
+            try {
+                const response = await fetch('admin/web-app/src/fetch_currencies.php');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch currencies');
+                }
+                const data = await response.json();
+                currencyData = data.sortedRows; // Store the fetched data globally
+                const currencySelectBuy = document.getElementById('currency-select');
+                const currencySelectSell = document.getElementById('currency-select-sell');
+
+                currencySelectBuy.innerHTML = '';
+                currencySelectSell.innerHTML = '';
+
+                data.sortedRows.forEach(currency => {
+                    const optionBuy = document.createElement('option');
+                    optionBuy.value = currency.currency_code;
+                    optionBuy.textContent = `${currency.currency_code} - ${currency.currency_name}`;
+                    currencySelectBuy.appendChild(optionBuy);
+
+                    const optionSell = document.createElement('option');
+                    optionSell.value = currency.currency_code;
+                    optionSell.textContent = `${currency.currency_code} - ${currency.currency_name}`;
+                    currencySelectSell.appendChild(optionSell);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load currencies. Please try again.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchCurrencies);
+
+        document.getElementById('currency-select').addEventListener('change', function () {
+            const selectedCurrency = this.value;
+            const selectedCurrencyData = currencyData.find(currency => currency.currency_code === selectedCurrency);
+
+            if (selectedCurrencyData) {
+                const rate = selectedCurrencyData.buy_price;
+                document.getElementById('exchange-rate').textContent = `1 GBP = ${rate} ${selectedCurrencyData.currency_code}`;
+
+                const buyAmountInput = document.getElementById('amount');
+                const gbpOutput = document.getElementById('gbp');
+
+                buyAmountInput.value = ''; // Clear the input field
+                gbpOutput.value = '0.00'; // Reset GBP output
+
+                buyAmountInput.addEventListener('input', function () {
+                    const amount = parseFloat(this.value) || 0;
+                    gbpOutput.value = (amount / rate).toFixed(2);
+                });
+            }
+        });
+
+        document.getElementById('sell-tab').addEventListener('click', function () {
+            const sellTabContent = document.getElementById('sell');
+            const buyTabContent = document.getElementById('buy');
+
+            // Ensure the 'Sell Travel Money' tab content is displayed and 'Buy Travel Money' is deactivated
+            sellTabContent.classList.add('show', 'active');
+            buyTabContent.classList.remove('show', 'active');
+
+            // Update the tab navigation to reflect the active tab
+            document.getElementById('sell-tab').classList.add('active');
+            document.getElementById('buy-tab').classList.remove('active');
+
+            const sellCurrencySelect = document.querySelector('#sell select');
+            sellCurrencySelect.innerHTML = ''; // Clear existing options
+
+            currencyData.forEach(currency => {
+                const option = document.createElement('option');
+                option.value = currency.currency_code;
+                option.textContent = `${currency.currency_code} - ${currency.currency_name}`;
+                sellCurrencySelect.appendChild(option);
+            });
+
+            sellCurrencySelect.addEventListener('change', function () {
+                const selectedCurrency = this.value;
+                const selectedCurrencyData = currencyData.find(currency => currency.currency_code === selectedCurrency);
+
+                if (selectedCurrencyData) {
+                    const rate = selectedCurrencyData.sell_price; // Use sell_price for calculations
+                    document.getElementById('exchange-rate-sell').textContent = `1 GBP = ${rate} ${selectedCurrencyData.currency_code}`;
+
+                    const sellAmountInput = document.getElementById('amount-sell');
+                    const gbpOutput = document.getElementById('gbp-sell');
+
+                    sellAmountInput.value = ''; // Clear the input field
+                    gbpOutput.value = '0.00'; // Reset GBP output
+
+                    sellAmountInput.addEventListener('input', function () {
+                        const amount = parseFloat(this.value) || 0;
+                        gbpOutput.value = (amount / rate).toFixed(2); // Corrected calculation for GBP amount
+                    });
+                }
+            });
+        });
+
+        document.getElementById('buy-tab').addEventListener('click', function () {
+            const buyTabContent = document.getElementById('buy');
+            const sellTabContent = document.getElementById('sell');
+
+            // Ensure the 'Buy Travel Money' tab content is displayed and 'Sell Travel Money' is deactivated
+            buyTabContent.classList.add('show', 'active');
+            sellTabContent.classList.remove('show', 'active');
+
+            // Update the tab navigation to reflect the active tab
+            document.getElementById('buy-tab').classList.add('active');
+            document.getElementById('sell-tab').classList.remove('active');
+
+            const buyCurrencySelect = document.querySelector('#buy select');
+            buyCurrencySelect.addEventListener('change', function () {
+                const selectedCurrency = this.value;
+                const selectedCurrencyData = currencyData.find(currency => currency.currency_code === selectedCurrency);
+
+                if (selectedCurrencyData) {
+                    const rate = selectedCurrencyData.buy_price; // Use buy_price as the rate
+                    document.querySelector('#buy #exchange-rate').textContent = `1 GBP = ${rate} ${selectedCurrencyData.currency_code}`;
+
+                    const buyAmountInput = document.querySelector('#buy #amount');
+                    const gbpOutput = document.querySelector('#buy #gbp');
+
+                    buyAmountInput.addEventListener('input', function () {
+                        const amount = parseFloat(this.value) || 0;
+                        gbpOutput.value = (amount / rate).toFixed(2);
+                    });
+                }
+            });
+        });
+
+        document.getElementById('currencyDropdown').addEventListener('change', function () {
+          const selectedCurrency = this.value;
+
+          // Send AJAX request to fetch exchange rate
+          fetch(`fetch_exchange_rate.php?currency=${selectedCurrency}`)
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('exchangeRate').textContent = data.rate.toFixed(2);
+            })
+            .catch(error => console.error('Error fetching exchange rate:', error));
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const currencySelectBuy = document.getElementById('currency-select');
+            const firstCurrency = currencyData[0]; // Get the first currency from the dropdown
+            if (firstCurrency) {
+                const rate = firstCurrency.buy_price; // Use buy_price for the default rate
+                document.getElementById('exchange-rate').textContent = `1 GBP = ${rate} ${firstCurrency.currency_code}`;
+
+                const buyAmountInput = document.getElementById('amount');
+                const gbpOutput = document.getElementById('gbp');
+
+                buyAmountInput.addEventListener('input', function () {
+                    const amount = parseFloat(this.value) || 0;
+                    gbpOutput.value = (amount / rate).toFixed(2); // Correct calculation for GBP amount
+                });
+            }
+        });
+    </script>
+</body>
+</html>
